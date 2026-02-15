@@ -1,41 +1,65 @@
 /**
  * \file pros/vision.hpp
+ * \ingroup cpp-vision
  *
  * Contains prototypes for the VEX Vision Sensor-related functions in C++.
- *
- * Visit https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html to learn
- * more.
  *
  * This file should not be modified by users, since it gets replaced whenever
  * a kernel upgrade occurs.
  *
- * Copyright (c) 2017-2018, Purdue University ACM SIGBots.
+ * \copyright (c) 2017-2024, Purdue University ACM SIGBots.
  * All rights reserved.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ *
+ * \defgroup cpp-vision Vision Sensor C++ API
+ * \note Additional example code for this module can be found in its [Tutorial.](@ref vision)
  */
 
 #ifndef _PROS_VISION_HPP_
 #define _PROS_VISION_HPP_
 
-#include "pros/vision.h"
-
 #include <cstdint>
 
+#include "pros/device.hpp"
+#include "pros/vision.h"
+
 namespace pros {
-class Vision {
+inline namespace v5 {
+/**
+ * \ingroup cpp-vision
+ */
+class Vision : public Device {
+	/**
+	 * \addtogroup cpp-vision
+	 *  @{
+	 */
 	public:
 	/**
 	 * Create a Vision Sensor object on the given port.
+	 *
+	 * This function uses the following values of errno when an error state is
+	 * reached:
+	 * ENXIO - The given value is not within the range of V5 ports (1-21).
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \param port
 	 *        The V5 port number from 1-21
 	 * \param zero_point
 	 *        One of vision_zero_e_t to set the (0,0) coordinate for the FOV
+	 *
+	 * \b Example
+	 * \code
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(1); // Creates a vision sensor on port one, with the zero point set to top left
+	 * }
+	 * \endcode
 	 */
 	Vision(std::uint8_t port, vision_zero_e_t zero_point = E_VISION_ZERO_TOPLEFT);
+
+	Vision(const Device& device) : Vision(device.get_port()){};
 
 	/**
 	 * Clears the vision sensor LED color, reseting it back to its default
@@ -43,10 +67,18 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \return 1 if the operation was successful or PROS_ERR if the operation
 	 * failed, setting errno.
+	 *
+	 * \b Example
+	 * \code
+	 * void initialize() {
+	 *   pros::Vision vision_sensor(1);
+	 *   vision_sensor.clear_led();
+	 * }
+	 * \endcode
 	 */
 	std::int32_t clear_led(void) const;
 
@@ -73,6 +105,27 @@ class Vision {
 	 *        Signature type
 	 *
 	 * \return A vision_signature_s_t that can be set using Vision::set_signature
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 *
+	 * void opcontrol() {
+	 * pros::Vision vision_sensor(VISION_PORT);
+	 * // values acquired from the vision utility
+	 * vision_signature_s_t RED_SIG =
+	 *   vision_signature_from_utility(EXAMPLE_SIG, 8973, 11143, 10058, -2119, -1053, -1586, 5.4, 0);
+	 * vision_sensor.set_signature(EXAMPLE_SIG, &RED_SIG);
+	 * while (true) {
+	 *   vision_signature_s_t rtn = vision_sensor.get_by_sig(VISION_PORT, 0, EXAMPLE_SIG);
+	 *   // Gets the largest object of the EXAMPLE_SIG signature
+	 *   printf("sig: %d", rtn.signature);
+	 *   // Prints "sig: 1"
+	 *   delay(2);
+	 *   }
+	 * }
+	 * \endcode
 	 */
 	static vision_signature_s_t signature_from_utility(const std::int32_t id, const std::int32_t u_min,
 	                                                   const std::int32_t u_max, const std::int32_t u_mean,
@@ -86,8 +139,8 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EINVAL - Fewer than two signatures have been provided, or one of the
-	 *          signatures is out of its [1-7] range.
+	 * EINVAL - Fewer than two signatures have been provided or one of the
+	 *          signatures is out of its [1-7] range (or 0 when omitted).
 	 *
 	 * \param sig_id1
 	 *        The first signature id [1-7] to add to the color code
@@ -101,19 +154,45 @@ class Vision {
 	 *        The fifth signature id [1-7] to add to the color code
 	 *
 	 * \return A vision_color_code_t object containing the color code information.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 * #define OTHER_SIG 2
+	 *
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_color_code_t code1 = vision_sensor.create_color_code(EXAMPLE_SIG, OTHER_SIG);
+	 * }
+	 * \endcode
 	 */
 	vision_color_code_t create_color_code(const std::uint32_t sig_id1, const std::uint32_t sig_id2,
 	                                      const std::uint32_t sig_id3 = 0, const std::uint32_t sig_id4 = 0,
 	                                      const std::uint32_t sig_id5 = 0) const;
 
 	/**
+	 * Gets all vision sensors.
+	 *
+	 * \return A vector of Vision sensor objects.
+	 *
+	 * \b Example
+	 * \code
+	 * void opcontrol() {
+	 *   std::vector<Vision> vision_all = pros::Vision::get_all_devices();  // All vision sensors that are connected
+	 * }
+	 * \endcode
+	 */
+	static std::vector<Vision> get_all_devices();
+
+	/**
 	 * Gets the nth largest object according to size_id.
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 * EDOM - size_id is greater than the number of available objects.
-	 * EHOSTDOWN - Reading the vision sensor failed for an unknown reason.
+	 * EAGAIN - Reading the vision sensor failed for an unknown reason.
 	 *
 	 * \param size_id
 	 *        The object to read from a list roughly ordered by object size
@@ -121,6 +200,21 @@ class Vision {
 	 *
 	 * \return The vision_object_s_t object corresponding to the given size id, or
 	 * PROS_ERR if an error occurred.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 *
+	 * void opcontrol() {
+	 * pros::Vision vision_sensor(VISION_PORT);
+	 * while (true) {
+	 *   vision_object_s_t rtn = vision_sensor.get_by_size(0);
+	 *   // Gets the largest object
+	 *   printf("sig: %d", rtn.signature);
+	 *   delay(2);
+	 *   }
+	 * }
+	 * \endcode
 	 */
 	vision_object_s_t get_by_size(const std::uint32_t size_id) const;
 
@@ -129,9 +223,10 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 * EDOM - size_id is greater than the number of available objects.
-	 * EHOSTDOWN - Reading the vision sensor failed for an unknown reason.
+	 * EINVAL - sig_id is outside the range [1-8]
+	 * EAGAIN - Reading the vision sensor failed for an unknown reason.
 	 *
 	 * \param size_id
 	 *        The object to read from a list roughly ordered by object size
@@ -142,6 +237,23 @@ class Vision {
 	 *
 	 * \return The vision_object_s_t object corresponding to the given signature
 	 * and size_id, or PROS_ERR if an error occurred.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 *
+	 * void opcontrol() {
+	 * pros::Vision vision_sensor(VISION_PORT);
+	 * while (true) {
+	 *   vision_object_s_t rtn = vision_sensor.get_by_sig(0, EXAMPLE_SIG);
+	 *   // Gets the largest object of the EXAMPLE_SIG signature
+	 *   printf("sig: %d", rtn.signature);
+	 *   // Prints "sig: 1"
+	 *   delay(2);
+	 *   }
+	 * }
+	 * \endcode
 	 */
 	vision_object_s_t get_by_sig(const std::uint32_t size_id, const std::uint32_t sig_id) const;
 
@@ -150,7 +262,7 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 * EAGAIN - Reading the Vision Sensor failed for an unknown reason.
 	 *
 	 * \param size_id
@@ -161,20 +273,47 @@ class Vision {
 	 *
 	 * \return The vision_object_s_t object corresponding to the given color code
 	 * and size_id, or PROS_ERR if an error occurred.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 * #define OTHER_SIG 2
+	 *
+	 * void opcontrol() {
+	 * 	 pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_color_code_t code1 = vision_sensor.create_color_code(EXAMPLE_SIG, OTHER_SIG);
+	 *   while (true) {
+	 *     vision_object_s_t rtn = vision_sensor.get_by_code(0, code1);
+	 *     // Gets the largest object
+	 *     printf("sig: %d", rtn.signature);
+	 *     delay(2);
+	 *   }
+	 * }
+	 * \endcode
 	 */
 	vision_object_s_t get_by_code(const std::uint32_t size_id, const vision_color_code_t color_code) const;
 
 	/**
-	 * Gets the exposure parameter of the Vision Sensor. See
-	 * https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html#exposure-setting
-	 * for more detials.
+	 * Gets the exposure parameter of the Vision Sensor.
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \return The current exposure parameter from [0,150],
 	 * PROS_ERR if an error occurred
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 *
+	 * void initialize() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   if (vision_sensor.get_exposure() < 50)
+	 *   vision_sensor.set_exposure(50);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t get_exposure(void) const;
 
@@ -183,20 +322,49 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \return The number of objects detected on the specified vision sensor.
 	 * Returns PROS_ERR if the port was invalid or an error occurred.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 *
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   while (true) {
+	 *     printf("Number of Objects Detected: %d\n", vision_sensor.get_object_count());
+	 *     delay(2);
+	 *   }
+	 * }
+	 * \endcode
 	 */
 	std::int32_t get_object_count(void) const;
 
 	/**
 	 * Gets the object detection signature with the given id number.
 	 *
+	 * This function uses the following values of errno when an error state is
+	 * reached:
+	 * ENODEV - The port cannot be configured as a vision sensor
+	 *
 	 * \param signature_id
 	 *        The signature id to read
 	 *
 	 * \return A vision_signature_s_t containing information about the signature.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 *
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_signature_s_t sig = vision_sensor.get_signature(EXAMPLE_SIG);
+	 *   vision_sensor.print_signature(sig);
+	 * }
+	 * \endcode
 	 */
 	vision_signature_s_t get_signature(const std::uint8_t signature_id) const;
 
@@ -205,9 +373,21 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \return The current RGB white balance setting of the sensor
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define VISION_WHITE 0xff
+	 *
+	 * void initialize() {
+	 * 	 pros::Vision vision_sensor(VISION_PORT);
+	 *   if (vision_sensor.get_white_balance() != VISION_WHITE)
+	 *   vision_sensor.set_white_balance(VISION_WHITE);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t get_white_balance(void) const;
 
@@ -216,8 +396,9 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 * EDOM - size_id is greater than the number of available objects.
+	 * EAGAIN - Reading the vision sensor failed for an unknown reason.
 	 *
 	 * \param size_id
 	 *        The object to read from a list roughly ordered by object size
@@ -232,6 +413,23 @@ class Vision {
 	 * Returns PROS_ERR if the port was invalid, an error occurred, or fewer objects
 	 * than size_id were found. All objects in object_arr that were not found are
 	 * given VISION_OBJECT_ERR_SIG as their signature.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define NUM_VISION_OBJECTS 4
+	 *
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_object_s_t object_arr[NUM_VISION_OBJECTS];
+	 *   while (true) {
+	 *     vision_sensor.read_by_size(0, NUM_VISION_OBJECTS, object_arr);
+	 *     printf("sig: %d", object_arr[0].signature);
+	 *     // Prints the signature of the largest object found
+	 *     delay(2);
+	 *   }
+	 * }
+	 * \endcode
 	 */
 	std::int32_t read_by_size(const std::uint32_t size_id, const std::uint32_t object_count,
 	                          vision_object_s_t* const object_arr) const;
@@ -241,9 +439,10 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 * EDOM - size_id is greater than the number of available objects.
-	 * EHOSTDOWN - Reading the vision sensor failed for an unknown reason.
+	 * EINVAL - sig_id is outside the range [1-8]
+	 * EAGAIN - Reading the vision sensor failed for an unknown reason.
 	 *
 	 * \param object_count
 	 *        The number of objects to read
@@ -261,6 +460,24 @@ class Vision {
 	 * Returns PROS_ERR if the port was invalid, an error occurred, or fewer objects
 	 * than size_id were found. All objects in object_arr that were not found are
 	 * given VISION_OBJECT_ERR_SIG as their signature.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 * #define NUM_VISION_OBJECTS 4
+	 *
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_object_s_t object_arr[NUM_VISION_OBJECTS];
+	 *   while (true) {
+	 *     vision_sensor.read_by_sig(0, EXAMPLE_SIG, NUM_VISION_OBJECTS, object_arr);
+	 *     printf("sig: %d", object_arr[0].signature);
+	 *     // Prints "sig: 1"
+	 *     delay(2);
+	 *   }
+	 * }
+	 * \endcode
 	 */
 	std::int32_t read_by_sig(const std::uint32_t size_id, const std::uint32_t sig_id, const std::uint32_t object_count,
 	                         vision_object_s_t* const object_arr) const;
@@ -270,8 +487,9 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EINVAL - Fewer than object_count number of objects were found.
-	 * EACCES - Another resource is currently trying to access the port.
+	 * EDOM - size_id is greater than the number of available objects.
+	 * ENODEV - The port cannot be configured as a vision sensor
+	 * EAGAIN - Reading the vision sensor failed for an unknown reason.
 	 *
 	 * \param object_count
 	 *        The number of objects to read
@@ -288,6 +506,26 @@ class Vision {
 	 * Returns PROS_ERR if the port was invalid, an error occurred, or fewer objects
 	 * than size_id were found. All objects in object_arr that were not found are
 	 * given VISION_OBJECT_ERR_SIG as their signature.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 * #define OTHER_SIG 2
+	 * #define NUM_VISION_OBJECTS 4
+	 *
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_object_s_t object_arr[NUM_VISION_OBJECTS];
+	 *   vision_color_code_t code1 = vision_sensor.create_color_code(EXAMPLE_SIG, OTHER_SIG, 0, 0, 0);
+	 *   while (true) {
+	 *     vision_sensor.read_by_code(0, code1, NUM_VISION_OBJECTS, object_arr);
+	 *     printf("sig: %d", object_arr[0].signature);
+	 *     // Prints the signature of the largest object found
+	 *     delay(2);
+	 *   }
+	 * }
+	 * \endcode
 	 */
 	int32_t read_by_code(const std::uint32_t size_id, const vision_color_code_t color_code,
 	                     const std::uint32_t object_count, vision_object_s_t* const object_arr) const;
@@ -299,6 +537,18 @@ class Vision {
 	 *        The signature for which the contents will be printed
 	 *
 	 * \return 1 if no errors occured, PROS_ERR otherwise
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 *
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_signature_s_t sig = visionsensor.get_signature(EXAMPLE_SIG);
+	 *   vision_print_signature(sig);
+	 * }
+	 * \endcode
 	 */
 	static std::int32_t print_signature(const vision_signature_s_t sig);
 
@@ -307,30 +557,49 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \param enabled
 	 * 		    Pass 0 to disable, 1 to enable
 	 *
 	 * \return 1 if the operation was successful or PROS_ERR if the operation
 	 * failed, setting errno.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 *
+	 * void initialize() {
+	 * 	 pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_sensor.set_auto_white_balance(true);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t set_auto_white_balance(const std::uint8_t enable) const;
 
 	/**
-	 * Sets the exposure parameter of the Vision Sensor. See
-	 * https://pros.cs.purdue.edu/v5/tutorials/topical/vision.html#exposure-setting
-	 * for more detials.
+	 * Sets the exposure parameter of the Vision Sensor.
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \param percent
 	 *        The new exposure setting from [0,150].
 	 *
 	 * \return 1 if the operation was successful or PROS_ERR if the operation
 	 * failed, setting errno.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 *
+	 * void initialize() {
+	 * 	 pros::Vision vision_sensor(VISION_PORT);
+	 *   if (vision_sensor.get_exposure() < 50)
+	 *   vision_sensor.set_exposure(50);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t set_exposure(const std::uint8_t exposure) const;
 
@@ -339,13 +608,23 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \param rgb
 	 *        An RGB code to set the LED to
 	 *
 	 * \return 1 if the operation was successful or PROS_ERR if the operation
 	 * failed, setting errno.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 *
+	 * void initialize() {
+	 *	 pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_sensor.set_led(COLOR_BLANCHED_ALMOND);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t set_led(const std::int32_t rgb) const;
 
@@ -355,12 +634,30 @@ class Vision {
 	 * NOTE: This saves the signature in volatile memory, and the signature will be
 	 * lost as soon as the sensor is powered down.
 	 *
+	 * This function uses the following values of errno when an error state is
+	 * reached:
+	 * ENODEV - The port cannot be configured as a vision sensor
+	 * EINVAL - sig_id is outside the range [1-8]
+	 *
 	 * \param signature_id
 	 *        The signature id to store into
 	 * \param[in] signature_ptr
 	 *            A pointer to the signature to save
 	 *
 	 * \return 1 if no errors occured, PROS_ERR otherwise
+	 *
+	 *  \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define EXAMPLE_SIG 1
+	 *
+	 * void opcontrol() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_signature_s_t sig = vision_sensor.get_signature(EXAMPLE_SIG);
+	 *   sig.range = 10.0;
+	 *   vision_sensor.set_signature(EXAMPLE_SIG, &sig);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t set_signature(const std::uint8_t signature_id, vision_signature_s_t* const signature_ptr) const;
 
@@ -369,13 +666,24 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \param rgb
 	 *        The new RGB white balance setting of the sensor
 	 *
 	 * \return 1 if the operation was successful or PROS_ERR if the operation
 	 * failed, setting errno.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 * #define VISION_WHITE 0xff
+	 *
+	 * void initialize() {
+	 *   pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_sensor.set_white_balance(VISION_WHITE);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t set_white_balance(const std::int32_t rgb) const;
 
@@ -388,13 +696,23 @@ class Vision {
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:
-	 * EACCES - Another resource is currently trying to access the port.
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \param zero_point
 	 *        One of vision_zero_e_t to set the (0,0) coordinate for the FOV
 	 *
 	 * \return 1 if the operation was successful or PROS_ERR if the operation
 	 * failed, setting errno.
+	 *
+	 * \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 *
+	 * void initialize() {
+	 * 	 pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_sensor.set_zero_point(E_VISION_ZERO_CENTER);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t set_zero_point(vision_zero_e_t zero_point) const;
 
@@ -403,19 +721,67 @@ class Vision {
 	 *
 	 * This functions uses the following values of errno when an error state is
 	 * reached:
-	 * EINVAL - The given port is not within the range of V5 ports (1-21)
-	 * EACCESS - Anothe resources is currently trying to access the port
+	 * ENODEV - The port cannot be configured as a vision sensor
 	 *
 	 * \param enable
 	 *        Disable Wi-Fi on the Vision sensor if 0, enable otherwise (e.g. 1)
 	 *
 	 * \return 1 if the operation was successful or PROS_ERR if the operation
 	 * failed, setting errno.
+	 *
+	 *  \b Example
+	 * \code
+	 * #define VISION_PORT 1
+	 *
+	 * void initialize() {
+	 * 	 pros::Vision vision_sensor(VISION_PORT);
+	 *   vision_sensor.set_wifi_mode(0);
+	 * }
+	 * \endcode
 	 */
 	std::int32_t set_wifi_mode(const std::uint8_t enable) const;
 
+	/**
+	 * Gets a vision sensor that is plugged in to the brain
+	 *
+	 * \note The first time this function is called it returns the vision sensor at the lowest port
+	 * If this function is called multiple times, it will cycle through all the ports.
+	 * For example, if you have 1 vision sensor on the robot
+	 * this function will always return a vision sensor object for that port.
+	 * If you have 2 vision sensors, all the odd numered calls to this function will return objects
+	 * for the lower port number,
+	 * all the even number calls will return vision objects for the higher port number
+	 *
+	 *
+	 * This functions uses the following values of errno when an error state is
+	 * reached:
+	 * ENODEV - No vision sensor is plugged into the brain
+	 *
+	 * \return A vision object corresponding to a port that a vision sensor is connected to the brain
+	 * If no vision sensor is plugged in, it returns a vision sensor on port PROS_ERR_BYTE
+	 *
+	 */
+	static Vision get_vision();
+
 	private:
-	std::uint8_t _port;
+	///@}
 };
+}  // namespace v5
+namespace literals {
+/**
+ * Constructs a Vision sensor from a litteral ending in _vis
+ *
+ * \return a pros::Vision for the corresponding port
+ *
+ * \b Example
+ * \code
+ * using namespace pros::literals;
+ * void opcontrol() {
+ *	pros::Vision vision = 2_vis; //Makes an Vision sensor object on port 2
+ * }
+ * \endcode
+ */
+const pros::Vision operator"" _vis(const unsigned long long int m);
+}  // namespace literals
 }  // namespace pros
 #endif  // _PROS_VISION_HPP_
