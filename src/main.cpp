@@ -1,22 +1,19 @@
 #include "main.h"
-#include "lemlib/api.hpp" 
+#include "global.hpp"
+#include "driver_profile.hpp"
 
+// basic
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <cstdio> 
 
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
-}
+// lvgl vars
+#include "liblvgl/lvgl.h"
+
+#include "ui.hpp" 
+#include "pros/apix.h"
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -25,10 +22,22 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
-
-	pros::lcd::register_btn1_cb(on_center_button);
+    pros::lcd::initialize(); // initialize brain screen
+    chassis.calibrate(); // calibrate sensors
+    create_main_screen();
+    /** 
+    // print position to brain screen
+    pros::Task screen_task([&]() {
+        while (true) {
+            // print robot location to the brain screen
+            pros::lcd::print(0, "X: %f", chassis.getPose().x); // x
+            pros::lcd::print(1, "Y: %f", chassis.getPose().y); // y
+            pros::lcd::print(2, "Theta: %f", chassis.getPose().theta); // heading
+            // delay to save resources
+            pros::delay(20);
+        }
+    });
+    */
 }
 
 /**
@@ -60,7 +69,9 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+    auton_list[current_auton_selection].func();
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -76,19 +87,18 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::MotorGroup left_mg({1, -2, 3});    // Creates a motor group with forwards ports 1 & 3 and reversed port 2
-	pros::MotorGroup right_mg({-4, 5, -6});  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
+    pros::delay(20);
 
+	int last_profile_selection = current_profile_selection;
+    profile_list[current_profile_selection].init();
 
 	while (true) {
-		int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-        int rightX = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+         if (current_profile_selection != last_profile_selection) {
+            profile_list[current_profile_selection].init();
+            last_profile_selection = current_profile_selection;
+        }
 
-        // move the robot
-        chassis.arcade(leftY, rightX);
-
-        // delay to save resources
-        pros::delay(25);                             // Run for 20 ms then update
+        profile_list[current_profile_selection].loop();
+		pros::delay(20);                               // Run for 20 ms then update
 	}
-}
+} // End of opcontrol 
