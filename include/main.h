@@ -34,6 +34,12 @@
  */
 #define PROS_USE_LITERALS
 
+// defined global.hpp
+#include "global.hpp"
+
+// defined lemlib
+#include "lemlib/api.hpp"
+
 #include "api.h"
 
 /**
