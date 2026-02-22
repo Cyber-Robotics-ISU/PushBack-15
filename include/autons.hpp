@@ -1,0 +1,17 @@
+#pragma once
+#include "global.hpp"
+
+#include "liblvgl/lvgl.h"
+#include "api.h"
+
+#include <cmath>
+#include <vector>
+#include <string>
+
+
+// Function declarations for autonomous routines
+
+void test_auton();
+void auton_left();
+void auton_right();
+void auton_skills();

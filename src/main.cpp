@@ -4,22 +4,18 @@
 #include "lemlib/api.hpp" 
 #include "pros/motors.h"
 
+// basic
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <cstdio> 
 
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
-	if (pressed) {
-		pros::lcd::set_text(2, "I was pressed!");
-	} else {
-		pros::lcd::clear_line(2);
-	}
-}
+// lvgl vars
+#include "liblvgl/lvgl.h"
+
+#include "ui.hpp" 
+#include "pros/apix.h"
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -67,7 +63,9 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+    auton_list[current_auton_selection].func();
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -91,4 +89,4 @@ void opcontrol() {  // Creates a motor group with forwards port 5 and reversed p
         // delay to save resources
         pros::delay(25);                             // Run for 20 ms then update
 	}
-}
+} // End of opcontrol 

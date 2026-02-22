@@ -15,3 +15,7 @@ temp.log
 temp.errors
 *.ini
 .d/
+
+# Ignore macOS and Windows system files
+.DS_Store
+Thumbs.db
