@@ -21,7 +21,13 @@ extern pros::MotorGroup left_motor_group;
 extern pros::MotorGroup right_motor_group;
 
 
-extern pros::MotorGroup intake_group;
+extern pros::MotorGroup intake_motor_group;
+extern pros::MotorGroup scoring_motor_group;
+
+
+// Define Pneumatics
+extern pros::adi::Pneumatics pneumatics;
+
 
 // Define VEX Sensors
 extern pros::Imu imu;

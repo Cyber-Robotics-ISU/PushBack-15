@@ -20,6 +20,11 @@ pros::MotorGroup left_motor_group({18,19,20}, pros::MotorGearset::blue); // left
 pros::MotorGroup right_motor_group({-11,-12,-13}, pros::MotorGearset::blue); // right motors use 600 RPM cartridges
 
 pros::MotorGroup intake_motor_group({1}, pros::MotorGearset::blue);
+pros::MotorGroup scoring_motor_group({14}, pros::MotorGearset::red);
+
+
+// Define Pneumatics
+pros::adi::Pneumatics pneumatics({'A'}, false);
 
 
 // Define VEX Sensors

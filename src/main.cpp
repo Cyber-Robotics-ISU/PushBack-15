@@ -64,7 +64,7 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-    auton_list[current_auton_selection].func();
+    
 }
 
 /**
@@ -81,12 +81,16 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {  // Creates a motor group with forwards port 5 and reversed ports 4 & 6
-	default_profile_init();
+	int last_profile_selection = current_profile_selection;
+    profile_list[current_profile_selection].init();
 
 	while (true) {
-		default_profile_loop();
+         if (current_profile_selection != last_profile_selection) {
+            profile_list[current_profile_selection].init();
+            last_profile_selection = current_profile_selection;
+        }
 
-        // delay to save resources
-        pros::delay(25);                             // Run for 20 ms then update
+        profile_list[current_profile_selection].loop();
+		pros::delay(20);                               // Run for 20 ms then update
 	}
 } // End of opcontrol 
