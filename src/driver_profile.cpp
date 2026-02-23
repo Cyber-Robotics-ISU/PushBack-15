@@ -3,6 +3,23 @@
 #include "global.hpp"
 
 
+bool pressed = 0;
+bool ToggleOn = 0;
+
+void Toggle(){
+    bool current = masterController.get_digital(pros::E_CONTROLLER_DIGITAL_R1);
+    if(current && !pressed){
+        ToggleOn = !ToggleOn;
+    }
+     if(ToggleOn){
+            intake_motor_group.move(127);
+        }
+    else{
+        intake_motor_group.move(0);
+    }
+    pressed = current;
+}
+
 void default_profile_init(){
     masterController.set_text(0, 1, "Default");
 }
@@ -38,4 +55,6 @@ void default_profile_loop(){
 
     // move the robot
     chassis.arcade(-leftY, rightX);
+    
 }
+
