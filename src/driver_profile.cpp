@@ -11,9 +11,9 @@ void Toggle(){
     if(current && !pressed){
         ToggleOn = !ToggleOn;
     }
-     if(ToggleOn){
-            intake_motor_group.move(127);
-        }
+    if(ToggleOn){
+        intake_motor_group.move(127);
+    }
     else{
         intake_motor_group.move(0);
     }
