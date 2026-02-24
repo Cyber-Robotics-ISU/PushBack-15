@@ -19,7 +19,7 @@ pros::Controller masterController(pros::E_CONTROLLER_MASTER);
 pros::MotorGroup left_motor_group({18,19,20}, pros::MotorGearset::blue); // left motors use 600 RPM cartrifges
 pros::MotorGroup right_motor_group({-11,-12,-13}, pros::MotorGearset::blue); // right motors use 600 RPM cartridges
 
-pros::MotorGroup intake_motor_group({1}, pros::MotorGearset::blue);
+pros::MotorGroup intake_motor_group({15}, pros::MotorGearset::blue);
 pros::MotorGroup scoring_motor_group({14}, pros::MotorGearset::red);
 
 
