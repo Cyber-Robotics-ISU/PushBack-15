@@ -5,9 +5,10 @@
 
 
 // Define variables 
-int current_profile_selection = 0; // Currently selected profile index
+int current_profile_selection = 1; // Currently selected profile index
 std::vector<ProfileOption> profile_list = {
-    {"Default", default_profile_init, default_profile_loop, "Basic default driving profile"}
+    {"Default", default_profile_init, default_profile_loop, "Basic default driving profile"},
+    {"Test", toggle_profile_init, toggle_profile_loop, "profile to test toggle functions"}
 };
 
 // Defined VEX Main Master Controller
@@ -19,8 +20,8 @@ pros::Controller masterController(pros::E_CONTROLLER_MASTER);
 pros::MotorGroup left_motor_group({18,19,20}, pros::MotorGearset::blue); // left motors use 600 RPM cartrifges
 pros::MotorGroup right_motor_group({-11,-12,-13}, pros::MotorGearset::blue); // right motors use 600 RPM cartridges
 
-pros::MotorGroup intake_motor_group({15}, pros::MotorGearset::blue);
-pros::MotorGroup scoring_motor_group({14}, pros::MotorGearset::red);
+pros::MotorGroup intake_motor_group({1}, pros::MotorGearset::blue);
+pros::MotorGroup scoring_motor_group({9}, pros::MotorGearset::red);
 
 
 // Define Pneumatics
@@ -30,8 +31,8 @@ pros::adi::Pneumatics pneumatics({'A'}, false);
 // Define VEX Sensors
 pros::Imu imu(10); 
 // pros::Distance distance(16);
-pros::Rotation horizontal_encoder(2); // horizontal tracking wheel Rotation sensor
-pros::Rotation vertical_encoder(3); // vertical tracking wheel Rotation sensor
+pros::Rotation horizontal_encoder(17); // horizontal tracking wheel Rotation sensor
+pros::Rotation vertical_encoder(16); // vertical tracking wheel Rotation sensor
 
 lemlib::ExpoDriveCurve throttle_curve(3, // joystick deadband out of 127
                                      10, // minimum output where drivetrain will move out of 127
@@ -48,7 +49,7 @@ lemlib::ExpoDriveCurve steer_curve(3, // joystick deadband out of 127
 lemlib::TrackingWheel horizontal_tracking_wheel(&horizontal_encoder, lemlib::Omniwheel::NEW_2, 3); // distance needs to be changed
 lemlib::TrackingWheel vertical_tracking_wheel(&vertical_encoder, lemlib::Omniwheel::NEW_2, 0); // distance needs to be changed
 lemlib::ControllerSettings angular_controller(
-    3.4, 0, 32.75,   // kP, kI, kD
+    .65, 0, 0,   // kP, kI, kD
     0,         // antiWindup
     0, 0,      // small error range & timeout
     0, 0,      // large error range & timeout
@@ -56,7 +57,7 @@ lemlib::ControllerSettings angular_controller(
 );
 
 lemlib::ControllerSettings lateral_controller(
-    5.5, 0, 0,   // kP, kI, kD
+    5.14, 0, 0,   // kP, kI, kD
     0,         // antiWindup
     0, 0,      // small error range & timeout
     0, 0,      // large error range & timeout

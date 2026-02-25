@@ -1,4 +1,4 @@
-/* #include "ui.hpp"
+#include "ui.hpp"
 #include <vector>
 #include <string>
 #include <cmath>
@@ -8,7 +8,7 @@
 #include "global.hpp"
 #include "autons.hpp"  
 
-// ============================================================================
+/* // ============================================================================
 //                               AUTON LOGIC
 // ============================================================================
 
@@ -38,7 +38,7 @@ void updateAutonList() {
         }
     }
 }
-
+*/
 // ============================================================================
 //                            GENERAL UI HELPERS
 // ============================================================================
@@ -59,7 +59,7 @@ lv_obj_t* create_button(lv_obj_t* parent, const char* text, lv_align_t align, in
     }, LV_EVENT_CLICKED, reinterpret_cast<void*>(callback));
 
     return btn;
-}
+} 
 
 // ============================================================================
 //                                MAIN SCREEN
@@ -72,7 +72,7 @@ void create_main_screen() {
     lv_obj_set_style_bg_color(screen, lv_color_hex(0x222244), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, LV_PART_MAIN);
 
-    // Generate Auton Button Text
+    /* // Generate Auton Button Text
     std::string autonInfo = "Auton Select\n";
     if (auton_list.empty()) {
         autonInfo += "(None)";
@@ -89,7 +89,7 @@ void create_main_screen() {
     }
 
     // Top Left: Auton Select
-    create_button(screen, autonInfo.c_str(), LV_ALIGN_TOP_LEFT, 20, 20, create_auton_color_screen);
+    create_button(screen, autonInfo.c_str(), LV_ALIGN_TOP_LEFT, 20, 20, create_auton_color_screen); */
 
     // Top Right: Profiles
     create_button(screen, "Profiles", LV_ALIGN_TOP_RIGHT, -20, 20, create_profiles_screen);
@@ -101,7 +101,7 @@ void create_main_screen() {
     //create_button(screen, "PID Tuning", LV_ALIGN_BOTTOM_RIGHT, -20, -20, create_pid_screen);
 }
 
-// ============================================================================
+/* // ============================================================================
 //                            AUTON SELECTION
 // ============================================================================
 
@@ -236,7 +236,7 @@ void create_auton_screen() {
     lv_label_set_text(blabel, "Back");
     lv_obj_center(blabel);
     lv_obj_add_event_cb(back, [](lv_event_t* e){ create_main_screen(); }, LV_EVENT_CLICKED, nullptr);
-}
+} */
 
 // ============================================================================
 //                            PROFILES SCREEN
@@ -306,4 +306,4 @@ void create_profiles_screen() {
     lv_label_set_text(blabel, "Back");
     lv_obj_center(blabel);
     lv_obj_add_event_cb(back, [](lv_event_t* e){ create_main_screen(); }, LV_EVENT_CLICKED, nullptr);
-} */
+}
