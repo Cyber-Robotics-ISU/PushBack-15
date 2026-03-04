@@ -53,6 +53,7 @@ extern pros::Motor intake;
 // Define Pneumatics
 extern pros::adi::Pneumatics blocker;
 extern pros::adi::Pneumatics extender;
+extern pros::adi::Pneumatics scrapper;
 
 // Define VEX Sensors
 extern pros::Imu imu;
