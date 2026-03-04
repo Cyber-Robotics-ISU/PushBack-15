@@ -20,6 +20,10 @@ void default_profile_loop() {
     int leftY = masterController.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     int rightX = masterController.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
 
+    if (masterController.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)) {
+        auton_right();
+    }
+
     leftY = throttle_curve.curve(leftY);
     rightX = steer_curve.curve(rightX);
     //chassis.arcade(leftY, rightX);

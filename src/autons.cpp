@@ -18,7 +18,7 @@ void auton_left() {
 void auton_right() {
     // Turn 90 degrees to the right from current heading
     chassis.setPose(0, 0, 0);
-    chassis.turnToHeading(90, 2000, {.maxSpeed = 100}, false);
+    chassis.turnToHeading(90, 2000, {}, false);
 }
 
 void auton_skills() {
