@@ -51,7 +51,7 @@ pros::Motor intake(1, pros::MotorGearset::blue);
 // Define Pneumatics
 pros::adi::Pneumatics extender({'A'}, false);
 pros::adi::Pneumatics blocker({'B'}, false);
-pros::adi::Pneumatics scrapper({'H'}, false);
+pros::adi::Pneumatics scrapper({'F'}, false);
 
 
 // Define VEX Sensors
